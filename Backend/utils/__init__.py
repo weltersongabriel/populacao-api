@@ -1,0 +1,3 @@
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from services.ibge_service import obter_top_10_estados_por_populacao, obter_historico_cidade
