@@ -1,23 +1,23 @@
 <div align="center">
 
-# 🌎 Sistema Populacional IBGE
+# 🌎 Sistema Populacional IBGE — **Backend API**
 
-### Consulta, evolução e comparação de dados demográficos dos municípios brasileiros — com foco na **Bahia**
+### API REST para consulta, evolução e comparação de dados demográficos dos municípios brasileiros — com foco na **Bahia**
 
 <p>
   <img src="https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python" />
   <img src="https://img.shields.io/badge/FastAPI-0.100+-009688?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI" />
-  <img src="https://img.shields.io/badge/React-18+-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React" />
   <img src="https://img.shields.io/badge/IBGE-API%20Oficial-2E7D32?style=for-the-badge" alt="IBGE API" />
   <img src="https://img.shields.io/badge/Status-Em%20desenvolvimento-F59E0B?style=for-the-badge" alt="Status" />
 </p>
 
 <p>
   <a href="#-sobre-o-projeto">Sobre</a> •
-  <a href="#-funcionalidades">Funcionalidades</a> •
+  <a href="#-funcionalidades-da-api">Funcionalidades</a> •
   <a href="#-arquitetura">Arquitetura</a> •
   <a href="#-tecnologias">Tecnologias</a> •
   <a href="#-como-executar">Como executar</a> •
+  <a href="#-endpoints">Endpoints</a> •
   <a href="#-equipe">Equipe</a>
 </p>
 
@@ -27,63 +27,49 @@
 
 ## 📖 Sobre o projeto
 
-O **Sistema Populacional IBGE** é uma aplicação web distribuída que consome as APIs públicas do **IBGE (Instituto Brasileiro de Geografia e Estatística)** para transformar dados do Censo em informação visual, clara e comparável.
+O **Sistema Populacional IBGE - Backend** é uma **API REST** desenvolvida em Python com FastAPI que consome as APIs públicas do **IBGE (Instituto Brasileiro de Geografia e Estatística)** para transformar dados do Censo em informação estruturada e pronta para consumo por frontends.
 
-Com ele é possível explorar o ranking dos municípios mais populosos, acompanhar o crescimento de qualquer cidade entre **1991 e 2022** e comparar duas cidades lado a lado — tudo em uma interface moderna com efeito *glassmorphism*.
+> ⚠️ **IMPORTANTE:** Este repositório contém **apenas o backend** da aplicação. O frontend (React) foi desenvolvido separadamente e não faz parte deste repositório.
 
 > 🎓 **Projeto acadêmico** desenvolvido para a unidade curricular **Sistemas Distribuídos e Mobile**.
 
 ---
 
-## ✨ Funcionalidades
+## ✨ Funcionalidades da API
 
 | Recurso | Descrição |
 | :--- | :--- |
-| 🏆 **Top 10 municípios** | Ranking interativo das cidades mais populosas da Bahia, com suporte aos demais estados. |
-| 📈 **Evolução do Censo** | Gráfico de linha com o crescimento populacional de 1991 a 2022 para qualquer município do Brasil. |
-| ⚖️ **Comparador demográfico** | Compara duas cidades, exibindo a diferença absoluta e a razão de proporção entre elas. |
-| 🎨 **Interface inovadora** | Design em *glassmorphism*, cartões flutuantes, paleta equilibrada e mapas minimalistas do Brasil e da Bahia. |
-
-<!-- Substitua pelos prints reais do sistema -->
-<!--
-## 🖼️ Screenshots
-
-| Home | Evolução | Comparador |
-| :---: | :---: | :---: |
-| ![Home](docs/home.png) | ![Evolução](docs/evolucao.png) | ![Comparador](docs/comparador.png) |
--->
+| 🏆 **Top 10 municípios** | Ranking das cidades mais populosas da Bahia (rota padrão) e suporte aos demais estados. |
+| 📈 **Evolução do Censo** | Série histórica do crescimento populacional de 1991 a 2022 para qualquer município do Brasil. |
+| ⚖️ **Comparador demográfico** | Compara duas cidades, retornando diferença absoluta e razão de proporção entre elas. |
+| 📚 **Documentação automática** | Swagger UI e ReDoc disponíveis em `/docs` e `/redoc`. |
 
 ---
 
 ## 🏗️ Arquitetura
 
-O projeto segue o modelo **monorepo**, com separação clara entre a API e a interface. O backend atua como camada intermediária: consulta o IBGE, trata os dados e entrega ao frontend apenas o necessário.
+A API atua como camada intermediária: consulta o IBGE, trata/normaliza os dados e entrega via JSON para o frontend consumir.
 
 ```mermaid
 flowchart LR
-    U([👤 Usuário]) --> F[⚛️ Frontend<br/>React + Axios]
-    F -->|HTTP / JSON| B[🐍 Backend<br/>FastAPI]
-    B -->|Requisições| I[(🏛️ APIs do IBGE)]
-    I -->|Dados do Censo| B
-    B -->|Dados tratados| F
+    FE[⚛️ Frontend<br/>(React - repo separado)] -->|HTTP / JSON| BE[🐍 Backend API<br/>FastAPI]
+    BE -->|Requisições| IBGE[(🏛️ APIs do IBGE)]
+    IBGE -->|Dados do Censo| BE
+    BE -->|Dados tratados| FE
 ```
 
 ### 📁 Estrutura de pastas
 
 ```text
-projeto-populacao-ibge/
-├── backend/                  # API REST em Python com FastAPI
-│   ├── main.py               # Ponto de entrada da aplicação e configuração de CORS
-│   ├── controllers/          # Endpoints HTTP da API
-│   ├── services/             # Regras de negócio e integração com o IBGE
-│   ├── schemas/              # Validação de tipos com Pydantic
-│   └── models/               # Modelos internos de domínio
-│
-└── frontend/                 # Interface web em React
-    └── src/
-        ├── components/       # Componentes visuais (cards, gráficos)
-        ├── pages/            # Páginas da aplicação (Home, Comparador)
-        └── services/         # Cliente HTTP (Axios) conectado à API
+populacao-api/
+└── Backend/                    # API REST em Python com FastAPI
+    ├── main.py                 # Ponto de entrada da aplicação e configuração de CORS
+    ├── controllers/            # Endpoints HTTP da API
+    ├── services/               # Regras de negócio e integração com o IBGE
+    ├── schemas/                # Validação de tipos com Pydantic
+    ├── models/                 # Modelos internos de domínio
+    ├── utils/                  # Utilitários e helpers
+    └── requirements.txt        # Dependências Python
 ```
 
 ---
@@ -96,10 +82,6 @@ projeto-populacao-ibge/
 - [Pydantic](https://docs.pydantic.dev/) — validação e serialização de dados
 - [Uvicorn](https://www.uvicorn.org/) — servidor ASGI
 
-**Frontend**
-- [React 18+](https://react.dev/)
-- [Axios](https://axios-http.com/) — cliente HTTP
-
 **Fonte de dados**
 - [APIs de Dados do IBGE](https://servicodados.ibge.gov.br/api/docs) — Censo Demográfico
 
@@ -110,20 +92,19 @@ projeto-populacao-ibge/
 ### 📋 Pré-requisitos
 
 - [Python 3.10+](https://www.python.org/downloads/)
-- [Node.js 18+](https://nodejs.org/) e npm
 - [Git](https://git-scm.com/)
 
 ### 1️⃣ Clonar o repositório
 
 ```bash
 git clone <URL_DO_REPOSITORIO_NO_GITHUB>
-cd projeto-populacao-ibge
+cd populacao-api
 ```
 
-### 2️⃣ Backend (FastAPI)
+### 2️⃣ Configurar e rodar o Backend
 
 ```bash
-cd backend
+cd Backend
 
 # Crie e ative um ambiente virtual
 python -m venv venv
@@ -140,34 +121,29 @@ pip install -r requirements.txt
 uvicorn main:app --reload
 ```
 
-✅ API disponível em **http://localhost:8000**
-📚 Documentação interativa (Swagger) em **http://localhost:8000/docs**
-
-### 3️⃣ Frontend (React)
-
-Em outro terminal:
-
-```bash
-cd frontend
-
-# Instale as dependências
-npm install
-
-# Inicie a aplicação
-npm run dev
-```
-
-✅ Interface disponível em **http://localhost:5173** *(a porta pode variar conforme a configuração do projeto)*
-
-> 💡 Mantenha o backend rodando enquanto usa o frontend — a interface depende da API para buscar os dados.
+✅ API disponível em **http://localhost:8000**  
+📚 Documentação interativa (Swagger) em **http://localhost:8000/docs**  
+📖 Documentação alternativa (ReDoc) em **http://localhost:8000/redoc**
 
 ---
 
+## 🔗 Endpoints
 
-# 👥 Nossa Equipe
- 
+| Método | Endpoint | Descrição |
+| :--- | :--- | :--- |
+| `GET` | `/` | Retorna o Top 10 municípios da Bahia (rota padrão) |
+| `GET` | `/municipios/top10` | Top 10 municípios por estado (query param: `uf`) |
+| `GET` | `/municipios/{codigo_ibge}/evolucao` | Evolução populacional 1991-2022 |
+| `GET` | `/municipios/comparar` | Compara dois municípios (query params: `cod1`, `cod2`) |
+
+> 💡 Acesse **http://localhost:8000/docs** para testar os endpoints interativamente.
+
+---
+
+## 👥 Nossa Equipe
+
 ### Os desenvolvedores por trás do projeto
- 
+
 <br/>
 <table>
   <tr>
@@ -200,22 +176,17 @@ npm run dev
 </table>
 <br/>
 
- 
-<br/>
+---
 
 ## 🎓 Orientação Acadêmica
- 
+
 <img src="https://img.shields.io/badge/Unidade%20Curricular-Sistemas%20Distribu%C3%ADdos%20e%20Mobile-1D4ED8?style=for-the-badge&logo=bookstack&logoColor=white" alt="Unidade Curricular" />
 <br/><br/>
- 
+
 <img src="https://img.shields.io/badge/Professor%20Orientador-Joilson%20Amorim%20Moreira-0F766E?style=for-the-badge&logo=googleclassroom&logoColor=white" alt="Professor Orientador" />
 <br/><br/>
- 
+
 > 👨‍🏫 *Agradecemos ao professor **Joilson Amorim Moreira** pela orientação e apoio durante todo o desenvolvimento deste projeto.*
- 
-</div>
----
- 
 
 ---
 
@@ -228,5 +199,3 @@ Este projeto foi desenvolvido para fins acadêmicos. Os dados utilizados pertenc
 Dados: [IBGE](https://www.ibge.gov.br/)
 
 </div>
-
-
