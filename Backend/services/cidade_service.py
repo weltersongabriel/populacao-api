@@ -1,6 +1,89 @@
 import requests
+import unicodedata
+
+def _normalizar_texto(texto: str) -> str:
+    """Remove acentos e converte para minúsculas para busca."""
+    if not texto:
+        return ""
+    nfkd = unicodedata.normalize('NFKD', texto)
+    return ''.join([c for c in nfkd if not unicodedata.combining(c)]).lower()
 
 class CidadeService:
+    _municipios_cache: list = []
+    _cache_carregado: bool = False
+
+    @classmethod
+    def _carregar_municipios(cls) -> list:
+        """Carrega e cacheia a lista de todos os municípios do IBGE."""
+        if cls._cache_carregado and cls._municipios_cache:
+            return cls._municipios_cache
+
+        try:
+            url = "https://servicodados.ibge.gov.br/api/v1/localidades/municipios?orderBy=nome"
+            response = requests.get(url, timeout=15)
+            if response.status_code == 200:
+                dados = response.json()
+                cls._municipios_cache = []
+                for item in dados:
+                    # Tenta obter UF via microrregiao -> mesorregiao -> UF
+                    uf_sigla = ""
+                    micro = item.get("microrregiao")
+                    if micro:
+                        meso = micro.get("mesorregiao")
+                        if meso:
+                            uf = meso.get("UF")
+                            if uf:
+                                uf_sigla = uf.get("sigla", "")
+
+                    # Fallback: tenta via regiao-imediata -> regiao-intermediaria -> UF
+                    if not uf_sigla:
+                        regiao_imediata = item.get("regiao-imediata")
+                        if regiao_imediata:
+                            regiao_intermediaria = regiao_imediata.get("regiao-intermediaria")
+                            if regiao_intermediaria:
+                                uf = regiao_intermediaria.get("UF")
+                                if uf:
+                                    uf_sigla = uf.get("sigla", "")
+
+                    cls._municipios_cache.append({
+                        "codigo_ibge": str(item.get("id", "")),
+                        "nome": item.get("nome", ""),
+                        "uf": uf_sigla
+                    })
+                cls._cache_carregado = True
+                return cls._municipios_cache
+        except Exception as e:
+            print(f"[ERRO CARREGAR MUNICÍPIOS]: {str(e)}")
+
+        return []
+
+    @classmethod
+    def buscar_cidades_por_nome(cls, nome: str, limite: int = 20) -> dict:
+        """Busca cidades pelo nome (busca parcial, case-insensitive, ignora acentos)."""
+        if not nome or len(nome.strip()) < 2:
+            return {"cidades": [], "total_encontrado": 0}
+
+        municipios = cls._carregar_municipios()
+        if not municipios:
+            return {"error": "Falha ao carregar lista de municípios do IBGE"}
+
+        nome_normalizado = _normalizar_texto(nome.strip())
+        resultados = [
+            m for m in municipios
+            if nome_normalizado in _normalizar_texto(m["nome"])
+        ]
+
+        # Ordena: primeiro os que começam com o nome, depois os que contêm
+        resultados.sort(key=lambda x: (
+            0 if _normalizar_texto(x["nome"]).startswith(nome_normalizado) else 1,
+            x["nome"]
+        ))
+
+        return {
+            "cidades": resultados[:limite],
+            "total_encontrado": len(resultados)
+        }
+
     @staticmethod
     def obter_historico_e_detalhes(codigo_ibge: str) -> dict:
         """Busca histórico do Censo para uma cidade de forma segura."""

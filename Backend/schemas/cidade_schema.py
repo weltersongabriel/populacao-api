@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 
 class HistoricoAno(BaseModel):
     ano: str
@@ -18,3 +18,12 @@ class ComparacaoCidadesResponse(BaseModel):
     diferenca_populacao: int
     cidade_mais_populosa: str
     razao_proporcional: float
+
+class CidadeBuscaResponse(BaseModel):
+    codigo_ibge: str
+    nome: str
+    uf: str
+
+class CidadesBuscaListResponse(BaseModel):
+    cidades: List[CidadeBuscaResponse]
+    total_encontrado: int

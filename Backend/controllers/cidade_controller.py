@@ -1,11 +1,23 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from services.cidade_service import CidadeService
 from schemas.cidade_schema import (
-    CidadeDetalheResponse, 
-    ComparacaoCidadesResponse
+    CidadeDetalheResponse,
+    ComparacaoCidadesResponse,
+    CidadesBuscaListResponse
 )
 
 router = APIRouter(prefix="/api/cidades", tags=["Cidades"])
+
+@router.get("/buscar", response_model=CidadesBuscaListResponse)
+def buscar_cidades(
+    nome: str = Query(..., min_length=2, description="Nome da cidade para buscar (mínimo 2 caracteres)"),
+    limite: int = Query(20, ge=1, le=50, description="Limite de resultados")
+):
+    """Busca cidades pelo nome (busca parcial, case-insensitive)."""
+    resultado = CidadeService.buscar_cidades_por_nome(nome, limite)
+    if "error" in resultado:
+        raise HTTPException(status_code=500, detail=resultado["error"])
+    return resultado
 
 @router.get("/{codigo_ibge}", response_model=CidadeDetalheResponse)
 def obter_detalhes_cidade(codigo_ibge: str):
